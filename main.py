@@ -1,16 +1,26 @@
-# This is a sample Python script.
+import logging
+import chat_qianwen
+import threading,os
+import asyncio
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+logging.basicConfig(level=logging.INFO,
+                        format='[%(asctime)s] [%(process)d] [%(thread)d] [%(levelname)s] [%(name)s] [%(processName)s/'
+                               '%(funcName)s] %(message)s')
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+# 单次模式测试，循环测试
+def test1():
+    while True:
+        question=input('\r\n请输入问题：（输入n表示退出）')
+        if question == 'n':
+            break
+        print("问题：",question)
+        answer=asyncio.run(chat_qianwen.chat_once(question))
+        print("回答：",answer)
+    input('请输入任意键退出')
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    print("主线程-启动运行 ", threading.current_thread().name, threading.current_thread().ident, os.getpid())
+    test1()
+    print("主线程-运行结束。",threading.current_thread().name,threading.current_thread().ident,os.getpid())
