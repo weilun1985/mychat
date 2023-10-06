@@ -1,10 +1,9 @@
 import asyncio,logging,os,time
 from typing import Coroutine
-
-import playwright.async_api
 from playwright.async_api import async_playwright,Page,Browser
 
-url = "https://bazinga.aliyun-inc.com/chat"
+#url = "https://bazinga.aliyun-inc.com/chat"
+url="https://qianwen.aliyun.com/"
 logger=logging.getLogger('chat.qianwen')
 
 __xpath_input='//div[@role="textbox" and @class="tts-editor-content"]'
@@ -17,7 +16,7 @@ __state=f"{__state_dir}/state_%s.json"
 
 __auths=[["dingtalk_fwjrtt", "do4best"]]
 __counter=0
-__headless=True
+__headless=False
 
 
 
@@ -28,19 +27,39 @@ logger.info(f'chat-state-dir: {__state_dir}')
 if not os.path.exists(__state_dir):
     os.makedirs(__state_dir)
 
+
 async def auto_auth(acc,page:Page):
+    if page.url.startswith("https://qianwen."):
+        await auto_auth_2(acc,page)
+    else:
+        await auto_auth_1(acc,page)
+
+async def screenshot(acc,page:Page):
+    path_screenshot = f'{__state_dir}/scst_{acc}.png'
+    await page.screenshot(path=path_screenshot)
+
+async def auto_auth_1(acc,page:Page):
     xpath_btn1='//div[@class="method-btn"]/i[contains(@class,"next-icon-scan")]/parent::div'
     xpath_qrcode='//div[@class="qrcode-img"]/img[@class="qr-image"]'
     xpath_btn2='//button[contains(@class,"next-btn-primary")]'
     btn1=await page.query_selector(xpath_btn1)
     await btn1.click()
-    qrcode=await page.wait_for_selector(xpath_qrcode)
+    await page.wait_for_selector(xpath_qrcode)
     await page.wait_for_load_state("load")
-    path_screenshot = f'{__state_dir}/scst_{acc}.png'
-    await page.screenshot(path=path_screenshot)
+    await screenshot(acc,page)
     btn_2=await page.wait_for_selector(xpath_btn2)
     await btn_2.click()
     await page.wait_for_load_state("domcontentloaded")
+
+async def auto_auth_2(acc,page:Page):
+    xpath_btn1='//button/span[text()="立即使用"]/parent::button'
+    xpath_qrcode='//img[@class="alipay-qrcode"]'
+    btn1 = await page.query_selector(xpath_btn1)
+    await btn1.click()
+    await page.wait_for_selector(xpath_qrcode)
+    await page.wait_for_load_state("load")
+    await screenshot(acc, page)
+
 
 # 提问及结果获取函数
 async def chat_qa_once(page:Page, question):
