@@ -2,7 +2,7 @@
 #pip3 install sanic.ext
 
 from sanic import Sanic,request,response
-import json,sanic.log,asyncio,logging,qianwen,queue,os
+import json,sanic.log,asyncio,logging,qianwen_old2,queue,os
 
 app= Sanic('mychat2')
 

@@ -83,8 +83,31 @@ def main_3():
 
 async def main_3_1():
     # 使用asyncio.gather并行执行函数
+    # asyncio.gather 返回的是所有已完成 Task 的 result，不需要再进行调用或其他操作，就可以得到全部结果
     print("In main thred ", threading.current_thread().name,threading.current_thread().ident,os.getpid())
     result=await asyncio.gather(func1(),func2())
+    print(result)
+
+async def main_3_11():
+    # 使用asyncion.wait并行执行函数
+    # asyncio.wait 使用一个set保存它创建的Task实例，因为set是无序的所以这也就是我们的任务不是顺序执行的原因。
+    # 会返回两个值：done 和 pending，done 为已完成的协程 Task，
+    # pending 为超时未完成的协程 Task，需通过 future.result 调用 Task 的 result
+    print("In main thred ", threading.current_thread().name, threading.current_thread().ident, os.getpid())
+    done, pending = await asyncio.wait([func1(),func2()], timeout=None)
+    for done_task in done:
+        print((f"{done_task.result()}"))
+
+async def main_3_12():
+    # 使用asyncio.gather并行执行函数,任务列表形式,调用gather时需要加"*"
+    # asyncio.gather 返回的是所有已完成 Task 的 result，不需要再进行调用或其他操作，就可以得到全部结果
+    print("In main thred ", threading.current_thread().name,threading.current_thread().ident,os.getpid())
+    task_list=[]
+    task1=asyncio.create_task(func1())
+    task2=asyncio.create_task(func2())
+    task_list.append(task1)
+    task_list.append(task2)
+    result=await asyncio.gather(*task_list)
     print(result)
 
 
@@ -93,7 +116,13 @@ def main_3_2():
     print("In main thred ", threading.current_thread().name,threading.current_thread().ident,os.getpid())
     loop=asyncio.get_event_loop()
     loop.run_until_complete(main_3_1())
+    loop.close()
 
+def main_3_21():
+    # 同步调异步方法一简化版：使用async.run减少代码
+    print("In main thred ", threading.current_thread().name,threading.current_thread().ident,os.getpid())
+    asyncio.run(main_3_1())
+    print('asyncio.run called')
 
 def main_3_3():
     # 同步调用异步方法二：使用asyncio.ensure_future调用 main_3_1()
@@ -227,7 +256,20 @@ def main_8_1():
     t.start()
     asyncio.run_coroutine_threadsafe(main_8(loop),loop)
 
+def main_9():
+    print("In main thread ", threading.current_thread().name, threading.current_thread().ident, os.getpid())
+    loop = asyncio.get_event_loop()
+    # 在子线程中运行事件循环，run_forever
+    t = threading.Thread(target=start_thread_loop, args=(loop,))
+    t.start()
+    # 通过asyncio.run_coroutine_threadsafe在loop上绑定了四个协程函数
+    # 主线程不会被阻塞，起的四个协程函数几乎同时返回的结果
+    # 但是协程所在的线程和主线程不是同一个线程，因为此时事件循环loop是放到了另外的子线程中跑的，所以此时这四个协程放到事件循环的线程中运行的
+    task_list=[func1(),func1(),func2(),func2()]
+    for task in task_list:
+        asyncio.run_coroutine_threadsafe(task, loop)
+    print("主线程不会阻塞", threading.current_thread().name, threading.current_thread().ident, os.getpid())
 
 if __name__=="__main__":
-    main_8_1()
+    main_9()
     print("主线程-运行结束。",threading.current_thread().name,threading.current_thread().ident,os.getpid())

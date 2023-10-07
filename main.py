@@ -1,5 +1,5 @@
 import logging
-import chat_qianwen
+import chat_qianwen_old
 import threading,os
 import asyncio
 
