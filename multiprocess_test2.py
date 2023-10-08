@@ -2,7 +2,6 @@ import asyncio
 import multiprocessing,logging,os
 import random
 import threading
-import time
 
 logging.basicConfig(level=logging.INFO,
                         format='[%(asctime)s] [%(process)d] [%(thread)d] [%(levelname)s] [%(name)s] [%(processName)s/'
